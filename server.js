@@ -32,7 +32,7 @@ const start = () => {
                 type: 'list',
                 name: 'mainMenu',
                 message: 'What Would You Like To Do???',
-                choices: ['Add Employee', 'Remove Employee', 'Update Employee', 'Add Department', 'Add Role','View All Employees', 'View Employee By Department', 'View Employee By Manager', 'Edit Employee Role', 'Edit Employee Manager', 'EXIT']
+                choices: ['Add Employee', 'Remove Employee', 'Update Employee', 'Add Department', 'Add Role', 'View All Employees', 'View Employee By Department', 'View Employee By Manager', 'Edit Employee Role', 'Edit Employee Manager', 'EXIT']
 
 
             }
@@ -52,6 +52,16 @@ const start = () => {
 
                 case 'Update Employee':
                     updateEmployee();
+
+                    break;
+
+                case 'Add Department':
+                    addDepartment();
+
+                    break;
+
+                case 'Add Role':
+                    addRole();
 
                     break;
 
@@ -91,31 +101,7 @@ const start = () => {
 
 };
 
-const pickManager = () => {
-    const managerArray = [];
-    connection.query('SELECT First_Name, Last_Name FROM employee WHERE Manager_ID is NULL', (err, res) => {
-        if (err) throw err;
-        for (let i = 0; i < res.length; i++) {
-            managerArray.push(res[i].First_Name)
 
-        }
-    })
-
-    return managerArray;
-};
-
-const addRole = () => {
-    const roleArray = [];
-    connection.query('SELECT * FROM roletype', (err, res) => {
-        if (err) throw err;
-        for (let i = 0; i < res.length; i++) {
-            roleAarray.push(res[i].Title);
-
-        }
-    })
-
-    return roleArray;
-};
 
 const addEmployee = () => {
     inquirer
@@ -131,30 +117,29 @@ const addEmployee = () => {
                 message: 'Enter Empolyee Last Name'
             },
             {
-                type: 'list',
-                name: 'managerName',
-                message: 'Enter Empolyee Manager',
-                choices: pickManager()
+                type: 'input',
+                name: 'eManager',
+                message: 'Enter Empolyee Manager ID',
+
 
             },
             {
-                type: 'list',
-                name: 'roleName',
-                message: 'Choose Employee Role',
-                choices: addRole()
+                type: 'input',
+                name: 'eRole',
+                message: 'Enter Employee Role ID',
+
             }
 
         ])
         .then((ans) => {
 
-            const roleID = addRole().indexOf(ans.roleName) + 1
-            const managerID = pickManager().indexOf(ans.managerName) + 1
+
 
             connection.query('INSERT INTO employee SET ?', {
                 First_Name: ans.firstName,
                 Last_Name: ans.lastName,
-                Role_ID: roleID,
-                Manager_ID: managerID
+                Role_ID: ans.eRole,
+                Manager_ID: ans.eManager
             },
                 (err, res) => {
                     if (err) throw err;
@@ -166,77 +151,81 @@ const addEmployee = () => {
         })
 };
 
-/*const removeEmployee = () =>{
-    //const query= connection.query('DELETE FROM employee WHERE Role_ID ?',
-    {
-        Role_ID: addRole().indexOf()
-    }
-    )
-} */
+const removeEmployee = () =>{
+    inquirer
+    .prompt([
+        {
+            type: 'input',
+            name: 'removeFirst',
+            message: 'Input The FIRST Name of Employee You Would Like to Remove'
+        },
+        {
+            type: 'input',
+            name: 'removeSecond',
+            message: 'Enter the LAST Name of the Employee You Would Like to Remove'
+        }
+
+    ])
+    .then((ans)=>{
+        connection.query('DELETE FROM employee WHERE?',
+        {
+            First_Name: ans.removeFirst,
+            Last_Name: ans.removeSecond
+        },
+        (err,res)=>{
+            if (err) throw err
+            console.table(ans)
+            start();
+        })
+    })
+};
+    
 
 const updateEmployee = () => {
 
-    connection.query('SELECT employee.Last_Name, roletype.Title FROM employee roletype WHERE employee.ID3=roleytpe.ID2', (err, res) => {
-        if (err) throw err;
-        console.log(res)
+    inquirer
+        .prompt([
 
-
-        inquirer
-            .prompt([
-
+            {
+                type: 'input',
+                name: 'newLastName',
+                message: 'What is the New Employee Last Name?'
+             },
+            {
+                type: 'input',
+                name: 'newRole',
+                message: 'Enter New Role'
+                
+            }
+        ])
+        .then((ans) => {
+            connection.query('UPDATE employee SET Role_ID= ? WHERE First_Name= ?'
+            ,
                 {
-                    type: 'rawlist',
-                    name: 'newLastName',
-                    message: 'What is the New Employee Last Name?',
-                    choices: function () {
-                        const lastNameArr = [];
-                        for (let i = 0; i < res.length; i++) {
-                            lastNameArr.push(res[i].Last_Name)
-
-                        }
-
-                        return lastNameArr;
-
-                    }
-
-
+                    Last_Name: ans.newLastName
                 },
                 {
-                    type: 'rawlist',
-                    name: 'newRole',
-                    message: 'Enter New Role',
-                    choices: addRole()
-                }
-            ])
-            .then((ans) => {
-                const roleIdUp = addRole().indexOf(ans.newRole) + 1
-                connection.query('UPDATE employee SET ? WHERE ?',
-                    {
-                        Last_Name: ans.newLastName
-                    },
-                    {
-                        Role_ID: roleIdUp
-                    },
-                    (err, res) => {
-                        if (err) throw err
-                        console.table(ans)
-                        start();
-                    })
+                    Role_ID: ans.newRole
+                },
+                (err, res) => {
+                    if (err) throw err
+                    console.table(ans)
+                    start();
+                })
 
-                });
-                
-                
-            })
-        };
+        });
+
+    };
+
 
 
 const allEmployee = () => {
-    connection.query('SELECT employee.First_Name, employee.Last_Name, department.DEPT_NAME, roletype.Title FROM department, roletype, employee INNER JOIN roletype u ON u.ID =employee.Role_ID INNER JOIN department u2 on u2.ID = u.Department_ID LEFT JOIN  employee u3 ON u3.ID=u3.Manager_ID;', (err,res)=>{
+    connection.query('SELECT employee.First_Name, employee.Last_Name, department.DEPT_NAME, roletype.Title FROM department, roletype, employee INNER JOIN roletype u ON u.ID =employee.Role_ID INNER JOIN department u2 on u2.ID = u.Department_ID LEFT JOIN  employee u3 ON u3.ID=u3.Manager_ID;', (err, res) => {
         if (err) throw err
         console.log(res)
         console.table(res)
         start();
-    } )
+    })
 };
 
 
