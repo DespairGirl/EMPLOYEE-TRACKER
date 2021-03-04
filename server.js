@@ -1,13 +1,12 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql');
 const console_table = require('console.table');
-const { listenerCount } = require('events');
-const { allowedNodeEnvironmentFlags } = require('process');
 
 
 //Add, Update, Remove employee
 // View employee by dept, view by manager, view all
 // update manager, update role
+// add role, department 
 const connection = mysql.createConnection({
     host: 'localhost',
     port: 3306,
@@ -33,7 +32,7 @@ const start = () => {
                 type: 'list',
                 name: 'mainMenu',
                 message: 'What Would You Like To Do???',
-                choices: ['Add Employee', 'Remove Employee', 'Update Employee', 'View All Employees', 'View Employee By Department', 'View Employee By Manager', 'Edit Employee Role', 'Edit Employee Manager', 'EXIT']
+                choices: ['Add Employee', 'Remove Employee', 'Update Employee', 'Add Department', 'Add Role','View All Employees', 'View Employee By Department', 'View Employee By Manager', 'Edit Employee Role', 'Edit Employee Manager', 'EXIT']
 
 
             }
@@ -107,7 +106,7 @@ const pickManager = () => {
 
 const addRole = () => {
     const roleArray = [];
-    connection.query('SELECT *FROM roletype', (err, res) => {
+    connection.query('SELECT * FROM roletype', (err, res) => {
         if (err) throw err;
         for (let i = 0; i < res.length; i++) {
             roleAarray.push(res[i].Title);
@@ -211,7 +210,7 @@ const updateEmployee = () => {
             ])
             .then((ans) => {
                 const roleIdUp = addRole().indexOf(ans.newRole) + 1
-                connection.query('UPDATE employee WHERE ?',
+                connection.query('UPDATE employee SET ? WHERE ?',
                     {
                         Last_Name: ans.newLastName
                     },
@@ -221,7 +220,7 @@ const updateEmployee = () => {
                     (err, res) => {
                         if (err) throw err
                         console.table(ans)
-                        start()
+                        start();
                     })
 
                 });
@@ -231,7 +230,14 @@ const updateEmployee = () => {
         };
 
 
-
+const allEmployee = () => {
+    connection.query('SELECT employee.First_Name, employee.Last_Name, department.DEPT_NAME, roletype.Title FROM department, roletype, employee INNER JOIN roletype u ON u.ID =employee.Role_ID INNER JOIN department u2 on u2.ID = u.Department_ID LEFT JOIN  employee u3 ON u3.ID=u3.Manager_ID;', (err,res)=>{
+        if (err) throw err
+        console.log(res)
+        console.table(res)
+        start();
+    } )
+};
 
 
 
