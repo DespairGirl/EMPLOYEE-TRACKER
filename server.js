@@ -1,6 +1,8 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql');
 const console_table = require('console.table');
+const db = require(".");
+
 
 
 //Add, Update, Remove employee
@@ -32,7 +34,7 @@ const start = () => {
                 type: 'list',
                 name: 'mainMenu',
                 message: 'What Would You Like To Do???',
-                choices: ['Add Employee', 'Remove Employee', 'Update Employee', 'Add Department', 'Add Role', 'View All Employees', 'View Employee By Department', 'View Employee By Manager', 'Edit Employee Role', 'Edit Employee Manager', 'EXIT']
+                choices: ['Add Employee', 'Remove Employee', 'Update Employee', 'Add Department', 'Add Role', 'View All Employees', 'View Employee By Department', 'View Employee By Manager', 'EXIT']
 
 
             }
@@ -138,7 +140,7 @@ const addEmployee = () => {
             },
                 (err, res) => {
                     if (err) throw err;
-                    console.table(ans)
+                    console.table(res)
                     start();
                 })
 
@@ -162,14 +164,13 @@ const removeEmployee = () =>{
 
     ])
     .then((ans)=>{
-        connection.query('DELETE FROM employee WHERE?',
-        {
-            First_Name: ans.removeFirst,
-            Last_Name: ans.removeSecond
-        },
-        (err,res)=>{
+        connection.query('DELETE FROM employee WHERE  First_Name =(?) AND Last_Name= (?)',[ans.removeFirst,ans.removeSecond],
+
+           
+             
+         (err,res)=>{
             if (err) throw err
-            console.table(ans)
+            console.table(res)
             start();
         })
     })
@@ -194,17 +195,12 @@ const updateEmployee = () => {
             }
         ])
         .then((ans) => {
-            connection.query('UPDATE employee SET Role_ID= ? WHERE First_Name= ?'
-            ,
-                {
-                    Last_Name: ans.newLastName
-                },
-                {
-                    Role_ID: ans.newRole
-                },
+            connection.query('UPDATE employee SET Role_ID= ? WHERE First_Name= ?',[ans.newLastName,ans.newRole],
+                
+               
                 (err, res) => {
                     if (err) throw err
-                    console.table(ans)
+                    console.table(res)
                     start();
                 })
 
@@ -223,8 +219,7 @@ const addDepartment =() =>{
         }
     ])
     .then((ans)=>{
-        connection.query('INSERT INTO department(DEPT_NAME) VALUE ? ',
-        [ans.DEPT_NAME],
+        connection.query('INSERT INTO department(DEPT_NAME) VALUE (?) ',[ans.DEPT_NAME],
         (err,res)=>{
             if(err) throw err;
             console.table(res)
@@ -252,11 +247,11 @@ const addRole = () =>{
             type: 'input',
             name: 'deptId',
             message: 'Enter the Department ID For This Role'
-        }
+        },
+       
     ])
     .then((ans)=>{
-        connection.query('INSERT INTO roletype(Title, Salary, Department_ID) VALUES ?',
-       [ans.newRoleName],[ans.salaryAmt],[ans.deptId],
+        connection.query('INSERT INTO roletype (Title, Salary, Department_ID) VALUES (?,?,?)',[ans.newRoleName,ans.salaryAmt,ans.deptId],
        (err,res) =>{
            if(err) throw err;
            console.table(res);
@@ -294,7 +289,7 @@ const byManager = () =>{
         }
     ])
     .then ((ans)=>{
-    connection.query('SELECT FROM employee WHERE Manager_ID= ?',
+    connection.query('SELECT FROM employee WHERE Manager_ID= (?)',
     [ans.mngID],
     (err,res)=>{
         if(err) throw err;

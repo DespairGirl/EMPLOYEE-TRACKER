@@ -28,6 +28,8 @@ CREATE TABLE employee(
     PRIMARY KEY (ID)
 );
 
+SET SQL_SAFE_UPDATES = 0;
+
 /*Department Seeds*/
 INSERT INTO department(DEPT_NAME)
 VALUE('Finance');
