@@ -80,16 +80,11 @@ const start = () => {
 
                     break;
 
-                case 'Edit Employee Role':
-                    employeeRole();
-
-                    break;
-
-                case 'Edit Employee Manager':
-                    employeeManager();
+                
 
                 case 'EXIT':
                     console.log('Goodbye')
+                    
 
 
                 default:
@@ -217,7 +212,58 @@ const updateEmployee = () => {
 
     };
 
+const addDepartment =() =>{
+    inquirer
+    .prompt([
+        {
+            type: 'input',
+            name: 'newDepartment',
+            message: 'What Department Would You Like to Add?'
 
+        }
+    ])
+    .then((ans)=>{
+        connection.query('INSERT INTO department(DEPT_NAME) VALUE ? ',
+        [ans.DEPT_NAME],
+        (err,res)=>{
+            if(err) throw err;
+            console.table(res)
+            start();
+        }
+        )
+    })
+};
+
+const addRole = () =>{
+    inquirer
+    .prompt([
+        {
+            type: 'input',
+            name: 'newRoleName',
+            message: 'Enter a Role You Would Like to Add'
+        },
+        {
+            type: 'input',
+            name: 'salaryAmt',
+            message: 'Enter the Salary For This Role'
+        },
+        {
+            
+            type: 'input',
+            name: 'deptId',
+            message: 'Enter the Department ID For This Role'
+        }
+    ])
+    .then((ans)=>{
+        connection.query('INSERT INTO roletype(Title, Salary, Department_ID) VALUES ?',
+       [ans.newRoleName],[ans.salaryAmt],[ans.deptId],
+       (err,res) =>{
+           if(err) throw err;
+           console.table(res);
+           start();
+       } )
+    })
+}
 
 const allEmployee = () => {
     connection.query('SELECT employee.First_Name, employee.Last_Name, department.DEPT_NAME, roletype.Title FROM department, roletype, employee INNER JOIN roletype u ON u.ID =employee.Role_ID INNER JOIN department u2 on u2.ID = u.Department_ID LEFT JOIN  employee u3 ON u3.ID=u3.Manager_ID;', (err, res) => {
@@ -228,6 +274,35 @@ const allEmployee = () => {
     })
 };
 
+const byDepartment =() =>{
+    connection.query('SELECT * FROM department', 
+    (err,res)=>{
+        if (err) throw err;
+        console.table(res);
+        start();
+        
+    })
+}
+
+const byManager = () =>{
+    inquirer
+    .prompt ([
+        {
+            type: 'input',
+            name: 'mngID',
+            message: 'Enter The Manager ID You Want To Sort By'
+        }
+    ])
+    .then ((ans)=>{
+    connection.query('SELECT FROM employee WHERE Manager_ID= ?',
+    [ans.mngID],
+    (err,res)=>{
+        if(err) throw err;
+        console.table(res)
+        start();
+    })
+})
+};
 
 
 
