@@ -16,6 +16,12 @@ const connection = mysql.createConnection({
     database: 'employee_db',
   });
 
+  connection.connect((err) => {
+    if (err) throw err;
+    console.log(`connected as id ${connection.threadId}\n`);
+    start();
+  });
+
 
 const start =() =>{
 
@@ -84,5 +90,78 @@ const start =() =>{
     
 
 };
-start();
 
+const pickManager = () =>{
+    const managerArray=[];
+    connection.query('SELECT First_Name, Last_Name FROM employee WHERE Manager_ID is NULL',(err,res)=>{
+        if (err) throw err;
+        for (let i = 0; i <res.length; i++) {
+          managerArray.push(res[i].First_Name)
+            
+        }
+    })
+
+    return managerArray;
+};
+
+const addRole = () =>{
+    const roleArray=[];
+    connection.query('SELECT *FROM roletype', (err,res)=>{
+        if(err) throw err;
+        for (let i = 0; i < res.length; i++) {
+             roleAarray.push(res[i].Title);
+            
+        }
+     })
+
+     return roleArray;
+};
+
+const addEmployee = () =>{
+    inquirer
+    .prompt([
+        {
+            type: 'input',
+            name: 'firstName',
+            message: 'Enter Empolyee First Name'
+        },
+        {
+            type: 'input',
+            name: 'lastName',
+            message: 'Enter Empolyee Last Name'
+        },
+        {
+            type: 'list',
+            name: 'managerName',
+            message: 'Enter Empolyee Manager',
+            choices: pickManager
+
+        },
+        {
+            type: 'list',
+            name: 'roleName',
+            message: 'Choose Employee Role',
+            choices: addRole
+        }
+        
+    ])
+    .then((ans) =>{
+
+        const roleID=addRole().indexOf(ans.roleName) + 1
+        const managerID=pickManager().indexOf(ans.managerName) + 1
+        
+        connection.query('INSERT INTO employee SET ?',{
+            First_Name: ans.firstName,
+            Last_Name: ans.lastName,
+            Role_ID: roleID,
+            Manager_ID: managerID
+        },
+        (err,res)=>{
+            if(err) throw err;
+            console.table(ans)
+            start();
+        })
+
+
+    })
+};
